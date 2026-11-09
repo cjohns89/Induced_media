@@ -11,7 +11,11 @@ library(ggpubr)
 library(grid)
 library(ggthemes)
 library(lemon)
-setwd("/Users/cjohns/Dropbox/Lith Adsorption/Spreadsheets/induced_media")
+
+#set working directory
+setwd()
+
+#read in raw data
 phytophys <- read.csv("20200712 IM photophys.csv")
 
 #removing unused columns 
@@ -525,86 +529,4 @@ sigma <- sigma_master %>%
 #ploting everything together
 ggarrange(alpha, ek, pmax, sigma, align = 'hv',  
           nrow = 2, ncol = 2, common.legend = TRUE)
-
-
-
-#############################################################################
-setwd("/Users/Christopher Johns/Dropbox/Rscripts/CSV/20192312_calcified_naked_photophysiology")
-calc_naked_phytophys <- read.csv("CJ201923.csv")
-
-
-#removing unused columns 
-calc_naked_phytophys <- subset(calc_naked_phytophys, select = -c(Alp4:Tau4)) 
-calc_naked_phytophys <- subset(calc_naked_phytophys, select = -c(MTF.Alp1:TauAv3.1)) 
-
-#adding necessary colunmns
-#converting PAR to Photons/m2/sec
-calc_naked_phytophys$photons <- ((calc_naked_phytophys$PAR/1000000)*6.02e23)
-
-#converting sigma to m2
-calc_naked_phytophys$sigma_m2 <- ((calc_naked_phytophys$Sigma*2)/1e20)
-
-#adding numerical identifieers to each row
-calc_naked_phytophys$ID <- 1:nrow(calc_naked_phytophys)
-
-#adds the sample number to each set
-calc_naked_phytophys <- calc_naked_phytophys %>% mutate(SampleID =  
-                                                          ifelse(ID >=1 & ID <19, "1",  
-                                                                 ifelse(ID >=19 & ID <37, "2",  
-                                                                        ifelse(ID >=37 & ID <55, "3", ""))))#for some reason needed the extra "" at the end to make it stop failing
-
-calc_naked_phytophys <- filter(calc_naked_phytophys, ID < 55) 
-
-
-
-calc_naked_phytophys <- calc_naked_phytophys %>% mutate(Treatment =  
-                                                          ifelse(SampleID >=1 & SampleID <2, "calcified",  
-                                                                 ifelse(SampleID >=2 & SampleID <3, "calcified and naked",  
-                                                                        ifelse(SampleID >=3 & SampleID <=4, "naked", ""))))
-
-
-#needed to create a new idea in order to find the correct ratios for the ETR
-calc_naked_phytophys$fake_ID <- as.factor(paste(calc_naked_phytophys$DATE, calc_naked_phytophys$SampleID, sep="-"))
-
-#calculating the ratios
-calc_naked_phytophys <- data.table (calc_naked_phytophys, key= c("fake_ID") )
-calc_naked_phytophys [, photo_eff_ratio:= (Fv.Fm/(Fv.Fm[match("0", PAR)])), by= c("fake_ID")]
-
-#calculating the ETR
-calc_naked_phytophys [, ETR:= (photons*(sigma_m2[match("0", PAR)])*photo_eff_ratio), by= c("fake_ID")]
-
-#calculating the NPQ
-calc_naked_phytophys [, NPQ:= (((Fm[match("0", PAR)])-Fm)/(Fm[match("0", PAR)])), by= c("fake_ID")]
-
-
-calc_naked_phytophystrimmed <- filter(calc_naked_phytophys, PAR < 502)
-                                      
-
-fig2 <- calc_naked_phytophystrimmed %>%  
-  arrange(ETR) %>%  
-  mutate(Treatment = factor(Treatment, levels = c("naked","calcified and naked","calcified"))) %>%
-  ggplot(aes(x = PAR, y = ETR, colour = Treatment))+  
-  geom_point()+  
-  theme_bw()+theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), axis.title.y = element_blank())+  
-  theme_classic()+
-  geom_smooth(method = 'loess', formula = 'y~x')+ #uses the default 95% confidence intervals
-  scale_colour_manual(name = "Treatment", labels = c("calcified" = "Calcified", "calcified and naked" = "Calcified and Naked", "naked" = "Naked"), values = c("calcified" = "#CC79A7", "calcified and naked" = "#0072B2", "naked" = "#E69F00"))+  
-  scale_x_continuous(name = bquote('Photosynthetically active radiation (PAR; '*mu~mol ~ photons ~ m^-2 ~ s^-1*')'))+  
-  scale_y_continuous(name = bquote('Electron transfer rate (ETR; '*electrons ~ s^-1 ~ PSII^-1*')'), expand = c(0,0))
-
-calc_naked_phytophys %>%  
-  arrange(NPQ) %>%  
-  mutate(Treatment = factor(Treatment, levels = c("calcified","calcified and naked","naked"))) %>%
-  ggplot(aes(x = PAR, y = NPQ, colour = Treatment))+  
-  geom_point()+  
-  theme_bw()+theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())+  
-  facet_wrap(~hour)+  
-  theme_classic()+
-  geom_smooth(method = 'loess', formula = 'y~x')+ #uses the default 95% confidence intervals
-  scale_colour_manual(name = "Treatment", labels = c("calcified" = "Calcified", "calcified and naked" = "Calcified and Naked", "naked" = "Naked"), values = c("calcified" = "#E69F00", "calcified and naked" = "#0072B2", "naked" = "#CC79A7"))+  
-  scale_x_continuous(name = bquote('Photosynthetically active radiation (PAR; '*mu~mol ~ photons ~ m^-2 ~ s^-1*')'))+  
-  scale_y_continuous(name = bquote('Electron transfer rate (ETR; '*electrons ~ s^-1 ~ PSII^-1*')'), expand = c(0,0))
-
-ggarrange(fig1, fig2, align = 'hv',  
-          nrow = 1, ncol = 2, common.legend = FALSE, legend = "bottom")
 
