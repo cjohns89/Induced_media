@@ -48,9 +48,9 @@ meta_data <- read.csv("/Users/Christopher/Dropbox/Lith Adsorption/Spreadsheets/i
   #needed for the metabolomics experiment growth curve
 induced_media <- read.csv("/Users/Christopher/Dropbox/Lith Adsorption/Spreadsheets/induced_media/induced_media_raw_data_file.csv", sep = ";")
   #metabolomics pathway analysis
-metabolomic_pathway_analysis <- read.csv("/Users/Christopher Johns/Dropbox/Lith Adsorption/Spreadsheets/induced_media/metabolic_pathway_analysis_updated.csv")
+metabolomic_pathway_analysis <- read.csv("/Users/Christopher/Dropbox/Lith Adsorption/Spreadsheets/induced_media/metabolic_pathway_analysis_updated.csv")
   #ids for pathway analysis
-metabo_analyst_ids <- read.csv("/Users/Christopher Johns/Dropbox/Lith Adsorption/Spreadsheets/induced_media/metabolomic_ids.csv")
+metabo_analyst_ids <- read.csv("/Users/Christopher/Dropbox/Lith Adsorption/Spreadsheets/induced_media/metabolomic_ids.csv")
 
 #transcriptomic datasets
   #ehux transcriptome
@@ -475,6 +475,9 @@ ggplot(aes(x=hour, y=log10(cell.concentration), colour=treatment))+
                                  "10kDa_concentrate" = "#FF3300",
                                  "evs" = "#D55E00"), guide = "none")
 
+#source data
+# write.csv(metabolomics_growth_sum, "/Users/Christopher/Dropbox/Lith Adsorption/Spreadsheets/induced_media/exported_source_data_files/figs13a.csv")
+
 #processing the metabolites
 #adding up all of the normalized ion counts in each row
 metabolomics$ion_sum <- rowSums(metabolomics[ , c(2:19)])
@@ -612,6 +615,8 @@ protein_volcano <- protein_results %>% rownames_to_column("compound") %>% mutate
   scale_color_manual(values = c("yes" = "red", "no" = "blue"), guide = "none")+
   geom_text(aes(label = ifelse(P.Value<0.05 & (abs(logFC)) > 1 ,as.character(compound),"")), size = 3, hjust = 0.5, vjust = -0.5)
 
+#source data
+# write.csv(protein_results, "/Users/Christopher/Dropbox/Lith Adsorption/Spreadsheets/induced_media/exported_source_data_files/figs13d.csv")
 
 vesicle_volcano <- vesicle_results %>% rownames_to_column("compound") %>% mutate(Color = ifelse(P.Value<0.05 & (abs(logFC)) > 1 , "yes", "no")) %>%
   ggplot(aes(x = logFC, y = -(log10(P.Value)), colour = Color, label = compound))+
@@ -633,6 +638,7 @@ vesicle_volcano <- vesicle_results %>% rownames_to_column("compound") %>% mutate
   scale_color_manual(values = c("yes" = "red", "no" = "blue"), guide = "none")+
   geom_text(aes(label = ifelse(P.Value<0.05 & (abs(logFC)) > 1 ,as.character(compound),"")), size = 3, hjust = 0.5, vjust = -0.5)
 
+# write.csv(vesicle_results, "/Users/Christopher/Dropbox/Lith Adsorption/Spreadsheets/induced_media/exported_source_data_files/figs13c.csv")
 
 vesicle_protein_results %>% rownames_to_column("compound") %>% mutate(Color = ifelse(P.Value < 0.05, "yes", "no")) %>%
   ggplot(aes(x = logFC, y = -(log10(P.Value)), colour = Color, label = compound))+
